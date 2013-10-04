@@ -6,6 +6,8 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import de.uniulm.bagception.bluetooth.BagceptionBTServiceInterface;
+
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothServerSocket;
@@ -14,7 +16,7 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
 
-public class BluetoothServerService extends Service implements BluetoothServerServiceControlInterface, Runnable, BagceptionBTService {
+public class BluetoothServerService extends Service implements BluetoothServerServiceControlInterface, Runnable, BagceptionBTServiceInterface {
 
 	private final int REQUEST_ENABLE_BT = 0;
 	private Thread acceptThread;
