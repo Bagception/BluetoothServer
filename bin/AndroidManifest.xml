@@ -16,7 +16,7 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name="de.uniulm.bagception.bluetoothserver.BTServerController"
+            android:name="de.uniulm.bagception.ui.BTServerController"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

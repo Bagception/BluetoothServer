@@ -60,7 +60,7 @@ public class BluetoothServerService extends ObservableService implements Runnabl
 	public void run() {
 		Log.d("Bluetooth","goto run");
 		BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-
+		
 		while (keepAlive){
 			Log.d("Bluetooth","in loop");
 			currWaitingSocket = null;
@@ -93,12 +93,13 @@ public class BluetoothServerService extends ObservableService implements Runnabl
 		BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 		if (bluetoothAdapter == null) {
 		    // Device does not support Bluetooth
+			
 			return;
 		}
 		
 		if (!bluetoothAdapter.isEnabled()) {
-		    Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-		    //startActivity(enableBtIntent);
+			
+		    return;
 		}
 		
 		handlermap = new ConcurrentHashMap<String, BluetoothServerHandler>();
@@ -108,6 +109,7 @@ public class BluetoothServerService extends ObservableService implements Runnabl
 		Log.d("Bluetooth","Server init done");
 	}
 
+	
 	
 	@Override
 	public void onDestroy() {
@@ -120,6 +122,7 @@ public class BluetoothServerService extends ObservableService implements Runnabl
 		super.onDestroy();
 	}
 
+	
 	
 	void unloadHandler(BluetoothServerHandler btsh){
 		handlermap.remove(btsh);
