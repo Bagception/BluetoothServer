@@ -1,8 +1,11 @@
 package de.uniulm.bagception.bluetoothserver;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 import de.philipphock.android.lib.services.ServiceUtil;
 import de.philipphock.android.lib.services.observation.ServiceObservationActor;
 import de.philipphock.android.lib.services.observation.ServiceObservationReactor;
+import de.uniulm.bagception.bluetoothserver.service.BluetoothServerHandler;
 import de.uniulm.bagception.bluetoothserver.service.BluetoothServerService;
 import android.os.Bundle;
 import android.app.Activity;
@@ -16,12 +19,12 @@ import android.widget.TextView;
 public class BTServerController extends Activity implements ServiceObservationReactor{
 	private ServiceObservationActor soActor;
 	
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_btserver_controller);
 		soActor = new ServiceObservationActor(this, BluetoothServerService.class.getName());
-		
 	}
 	
 	@Override
@@ -81,5 +84,6 @@ public class BTServerController extends Activity implements ServiceObservationRe
 		Button startStopButton = (Button) findViewById(R.id.startStopBTServer);
 		startStopButton.setText("start server");
 	}
+
 
 }

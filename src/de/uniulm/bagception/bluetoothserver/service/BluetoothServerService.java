@@ -1,8 +1,10 @@
 package de.uniulm.bagception.bluetoothserver.service;
 
 import java.io.IOException;
+import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -31,6 +33,9 @@ public class BluetoothServerService extends ObservableService implements Runnabl
     private final ThreadPoolExecutor executor;
     private BluetoothServerSocket currWaitingSocket;
 	
+	private ConcurrentHashMap<String, BluetoothServerHandler> handlermap;
+
+    
     public BluetoothServerService() {
     	executor = new ThreadPoolExecutor(executorCorePoolSize, executorMaxPoolSize, executorKeepAliveTime, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(2));
 	}
@@ -65,14 +70,17 @@ public class BluetoothServerService extends ObservableService implements Runnabl
 				Log.d("Bluetooth","Waiting for connection");
 				BluetoothSocket acceptedSocket = currWaitingSocket.accept();
 				Log.d("Bluetooth","connection accepted");
-				executor.submit(new BluetoothServerHandler(acceptedSocket));
+				executor.submit(new BluetoothServerHandler(this,acceptedSocket));
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 			
 		}
 		
-		//TODO shutdown all handler
+		for (BluetoothServerHandler handler : handlermap.values()) {
+		    handler.close();
+		}
+		handlermap.clear();
 		Log.d("BTS","servier shutdown");
 	}
 	
@@ -94,7 +102,8 @@ public class BluetoothServerService extends ObservableService implements Runnabl
 		    //startActivity(enableBtIntent);
 		}
 		
-		
+		handlermap = new ConcurrentHashMap<String, BluetoothServerHandler>();
+
 		acceptThread = new Thread(this);
 		acceptThread.start();
 		Log.d("Bluetooth","Server init done");
@@ -112,5 +121,9 @@ public class BluetoothServerService extends ObservableService implements Runnabl
 		super.onDestroy();
 	}
 
+	
+	void unloadHandler(BluetoothServerHandler btsh){
+		handlermap.remove(btsh);
+	}
 
 }
