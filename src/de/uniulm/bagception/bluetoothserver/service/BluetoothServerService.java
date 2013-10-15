@@ -1,14 +1,12 @@
 package de.uniulm.bagception.bluetoothserver.service;
 
 import java.io.IOException;
-import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
@@ -17,6 +15,7 @@ import android.os.IBinder;
 import android.util.Log;
 import de.philipphock.android.lib.services.observation.ObservableService;
 import de.uniulm.bagception.bluetooth.BagceptionBTServiceInterface;
+import de.uniulm.bagception.bluetoothserver.service.impl.BluetoothEchoHandler;
 
 public class BluetoothServerService extends ObservableService implements Runnable, BagceptionBTServiceInterface {
 
@@ -70,7 +69,7 @@ public class BluetoothServerService extends ObservableService implements Runnabl
 				Log.d("Bluetooth","Waiting for connection");
 				BluetoothSocket acceptedSocket = currWaitingSocket.accept();
 				Log.d("Bluetooth","connection accepted");
-				executor.submit(new BluetoothServerHandler(this,acceptedSocket));
+				executor.submit(new BluetoothEchoHandler(this,acceptedSocket));
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
