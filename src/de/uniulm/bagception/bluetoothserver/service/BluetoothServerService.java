@@ -6,8 +6,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import de.uniulm.bagception.bluetooth.BagceptionBTServiceInterface;
-
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothServerSocket;
@@ -15,8 +13,10 @@ import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
+import de.philipphock.android.lib.services.observation.ObservableService;
+import de.uniulm.bagception.bluetooth.BagceptionBTServiceInterface;
 
-public class BluetoothServerService extends Service implements BluetoothServerServiceControlInterface, Runnable, BagceptionBTServiceInterface {
+public class BluetoothServerService extends ObservableService implements Runnable, BagceptionBTServiceInterface {
 
 	private final int REQUEST_ENABLE_BT = 0;
 	private Thread acceptThread;
@@ -29,7 +29,7 @@ public class BluetoothServerService extends Service implements BluetoothServerSe
     private final int executorKeepAliveTime = 10;
     
     private final ThreadPoolExecutor executor;
-    
+    private BluetoothServerSocket currWaitingSocket;
 	
     public BluetoothServerService() {
     	executor = new ThreadPoolExecutor(executorCorePoolSize, executorMaxPoolSize, executorKeepAliveTime, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(2));
@@ -47,7 +47,6 @@ public class BluetoothServerService extends Service implements BluetoothServerSe
 	
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		init();
 		return super.onStartCommand(intent, flags, startId);
 	}
 	
@@ -60,20 +59,28 @@ public class BluetoothServerService extends Service implements BluetoothServerSe
 
 		while (keepAlive){
 			Log.d("Bluetooth","in loop");
-			BluetoothServerSocket tmp = null;
+			currWaitingSocket = null;
 			try {
-				tmp = bluetoothAdapter.listenUsingRfcommWithServiceRecord(BT_SERVICE_NAME, UUID.fromString(BT_UUID));
+				currWaitingSocket = bluetoothAdapter.listenUsingRfcommWithServiceRecord(BT_SERVICE_NAME, UUID.fromString(BT_UUID));
 				Log.d("Bluetooth","Waiting for connection");
-				BluetoothSocket acceptedSocket = tmp.accept();
+				BluetoothSocket acceptedSocket = currWaitingSocket.accept();
 				Log.d("Bluetooth","connection accepted");
 				executor.submit(new BluetoothServerHandler(acceptedSocket));
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+			
 		}
+		
+		//TODO shutdown all handler
+		Log.d("BTS","servier shutdown");
 	}
 	
-	private void init(){
+
+	
+	@Override
+	protected void onFirstInit() {
+		
 		Log.d("Bluetooth","Server init..");
 
 		BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -92,5 +99,18 @@ public class BluetoothServerService extends Service implements BluetoothServerSe
 		acceptThread.start();
 		Log.d("Bluetooth","Server init done");
 	}
+
+	
+	@Override
+	public void onDestroy() {
+		keepAlive = false;
+		try {
+			currWaitingSocket.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		super.onDestroy();
+	}
+
 
 }
