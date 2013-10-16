@@ -6,7 +6,7 @@ int id action_settings 0x7f08000b
 int id btStatus 0x7f080008
 int id button1 0x7f080002
 int id dialogText 0x7f080009
-int id enablebt 0x7f080003
+int id discoverableBtn 0x7f080003
 int id okButton 0x7f08000a
 int id serverStatus 0x7f080006
 int id ssClcon 0x7f080007

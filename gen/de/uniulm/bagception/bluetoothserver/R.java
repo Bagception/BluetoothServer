@@ -34,7 +34,7 @@ public final class R {
         public static final int btStatus=0x7f080008;
         public static final int button1=0x7f080002;
         public static final int dialogText=0x7f080009;
-        public static final int enablebt=0x7f080003;
+        public static final int discoverableBtn=0x7f080003;
         public static final int okButton=0x7f08000a;
         public static final int serverStatus=0x7f080006;
         public static final int ssClcon=0x7f080007;

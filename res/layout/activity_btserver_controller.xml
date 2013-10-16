@@ -29,13 +29,14 @@
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <Button
-        android:id="@+id/enablebt"
+        android:id="@+id/discoverableBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignLeft="@+id/startStopBTServer"
         android:layout_alignParentBottom="true"
         android:layout_marginBottom="65dp"
-        android:text="enable bt" />
+        android:onClick="makeDiscoverable"
+        android:text="makeDiscoverable" />
 
 
 

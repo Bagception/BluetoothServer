@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
@@ -35,8 +36,9 @@ public class BTServerController extends Activity implements ServiceObservationRe
 		onServiceStopped(null);
 		soActor.register(this);
 		btStateActor.register(this);
-		onBluetoothEnabledChanged(BluetoothAdapter.getDefaultAdapter().isEnabled());	
+		//onBluetoothEnabledChanged(BluetoothAdapter.getDefaultAdapter().isEnabled());	
 		ServiceUtil.requestStatusForServiceObservable(this, BluetoothServerService.class.getName());
+		btStateActor.refireBluetoothCallbacks();
 	}
 
 	@Override
@@ -114,6 +116,15 @@ public class BTServerController extends Activity implements ServiceObservationRe
 		
 	}
 	
+	
+	public void makeDiscoverable(View v){
+		Intent discoverableIntent = new
+		Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+		discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 0);
+		startActivity(discoverableIntent);
+	}
+
+	
 	@Override
 	public void onBluetoothEnabledChanged(boolean isEnabled) {
 		TextView bt = (TextView) findViewById(R.id.btStatus);
@@ -126,5 +137,44 @@ public class BTServerController extends Activity implements ServiceObservationRe
 		}
 	}
 
+	//BT listener
+	@Override
+	public void onBluetoothTurningOn() {
+		
+	}
+
+	@Override
+	public void onBluetoothTurningOff() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onBluetoothIsDiscoverable() {
+		Log.d("BT","is");
+		Button makeDiscoverableBtn = (Button) findViewById(R.id.discoverableBtn);
+		makeDiscoverableBtn.setEnabled(false);
+	}
+
+	@Override
+	public void onBluetoothIsConnectable() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onBluetoothIsNotConnectableAndNotDiscoveralbe() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onBluetoothIsNotDiscoveralbe() {
+		Log.d("BT","isNOT");
+		Button makeDiscoverableBtn = (Button) findViewById(R.id.discoverableBtn);
+		makeDiscoverableBtn.setEnabled(true);
+	}
+	
+	
 
 }
