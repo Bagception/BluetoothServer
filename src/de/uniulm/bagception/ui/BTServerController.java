@@ -44,10 +44,7 @@ public class BTServerController extends Activity implements ServiceObservationRe
 		ServiceUtil.requestStatusForServiceObservable(this, BluetoothServerService.class.getName());
 		btStateActor.refireBluetoothCallbacks();
 		updateClientConnected();
-		
-		IntentFilter f = new IntentFilter();
-		f.addAction(BluetoothServerHandler.BROADCAST_CLIENTS_CONNECTION_UPDATE);
-		registerReceiver(serverStatusListener,f );
+		registerReceiver(serverStatusListener, new IntentFilter(BluetoothServerHandler.BROADCAST_CLIENTS_CONNECTION_UPDATE));
 	}
 
 	
@@ -196,6 +193,7 @@ public class BTServerController extends Activity implements ServiceObservationRe
 		
 		@Override
 		public void onReceive(Context context, Intent intent) {
+			Log.d("BT","serverStatus recv") ;
 			updateClientConnected();
 			
 		}

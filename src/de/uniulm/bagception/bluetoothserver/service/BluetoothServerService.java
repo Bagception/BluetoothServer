@@ -60,23 +60,26 @@ public class BluetoothServerService extends ObservableService implements Runnabl
 	public void run() {
 		Log.d("Bluetooth","goto run");
 		BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-		
-		while (keepAlive){
-			Log.d("Bluetooth","in loop");
-			currWaitingSocket = null;
-			try {
-				currWaitingSocket = bluetoothAdapter.listenUsingRfcommWithServiceRecord(BT_SERVICE_NAME, UUID.fromString(BT_UUID));
+		try {
+			currWaitingSocket = bluetoothAdapter.listenUsingRfcommWithServiceRecord(BT_SERVICE_NAME, UUID.fromString(BT_UUID));
+			while (keepAlive){
+				Log.d("Bluetooth","in loop");
+				
 				Log.d("Bluetooth","Waiting for connection");
 				BluetoothSocket acceptedSocket = currWaitingSocket.accept();
 				Log.d("Bluetooth","connection accepted");
-				executor.submit(new BluetoothEchoHandler(this,acceptedSocket));
-			} catch (IOException e) {
-				e.printStackTrace();
+				BluetoothServerHandler h = new BluetoothEchoHandler(this,acceptedSocket);
+				handlermap.put(h.toString(),h);
+				executor.submit(h);
+				
 			}
-			
+		} catch (IOException e1) {
+			e1.printStackTrace();
 		}
 		
+		
 		for (BluetoothServerHandler handler : handlermap.values()) {
+			Log.d("BT","Handler close");
 		    handler.close();
 		}
 		handlermap.clear();

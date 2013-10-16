@@ -35,6 +35,7 @@ public abstract class BluetoothServerHandler implements Callable<Void>{
 	public BluetoothServerHandler(BluetoothServerService service,BluetoothSocket socket) {
 		this.service=service;
 		this.socket = socket;
+		
 		clientConnected(false);
 	}
 
