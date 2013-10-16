@@ -2,7 +2,10 @@ package de.uniulm.bagception.ui;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
@@ -16,6 +19,7 @@ import de.philipphock.android.lib.services.observation.ServiceObservationReactor
 import de.uniulm.bagception.bluetoothserver.R;
 import de.uniulm.bagception.bluetoothserver.bluetoothstate.BluetoothStateActor;
 import de.uniulm.bagception.bluetoothserver.bluetoothstate.BluetoothStateChangeReactor;
+import de.uniulm.bagception.bluetoothserver.service.BluetoothServerHandler;
 import de.uniulm.bagception.bluetoothserver.service.BluetoothServerService;
 
 public class BTServerController extends Activity implements ServiceObservationReactor, BluetoothStateChangeReactor{
@@ -39,13 +43,25 @@ public class BTServerController extends Activity implements ServiceObservationRe
 		//onBluetoothEnabledChanged(BluetoothAdapter.getDefaultAdapter().isEnabled());	
 		ServiceUtil.requestStatusForServiceObservable(this, BluetoothServerService.class.getName());
 		btStateActor.refireBluetoothCallbacks();
+		updateClientConnected();
+		
+		IntentFilter f = new IntentFilter();
+		f.addAction(BluetoothServerHandler.BROADCAST_CLIENTS_CONNECTION_UPDATE);
+		registerReceiver(serverStatusListener,f );
 	}
 
+	
+	private void updateClientConnected(){
+		TextView v = (TextView) findViewById(R.id.ssClcon);
+		v.setText(BluetoothServerHandler.getClientsConnected()+"");
+	}
+	
 	@Override
 	protected void onPause() {
 		super.onPause();
 		soActor.unregister(this);
 		btStateActor.unregister(this);
+		unregisterReceiver(serverStatusListener);
 	}
 	
 	@Override
@@ -151,7 +167,6 @@ public class BTServerController extends Activity implements ServiceObservationRe
 
 	@Override
 	public void onBluetoothIsDiscoverable() {
-		Log.d("BT","is");
 		Button makeDiscoverableBtn = (Button) findViewById(R.id.discoverableBtn);
 		makeDiscoverableBtn.setEnabled(false);
 	}
@@ -170,11 +185,21 @@ public class BTServerController extends Activity implements ServiceObservationRe
 
 	@Override
 	public void onBluetoothIsNotDiscoveralbe() {
-		Log.d("BT","isNOT");
+		
 		Button makeDiscoverableBtn = (Button) findViewById(R.id.discoverableBtn);
 		makeDiscoverableBtn.setEnabled(true);
 	}
 	
+	
+	
+	private final BroadcastReceiver serverStatusListener = new BroadcastReceiver() {
+		
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			updateClientConnected();
+			
+		}
+	};
 	
 
 }
