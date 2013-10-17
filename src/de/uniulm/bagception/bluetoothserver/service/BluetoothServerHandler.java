@@ -43,9 +43,9 @@ public abstract class BluetoothServerHandler implements Callable<Void>{
 	public Void call() throws Exception {
 		Log.d("Bluetooth","BT handler active");
 		int inp;
-		
-		while((inp = socket.getInputStream().read())!=-1){
-			recv((char)inp);
+		byte[] buffer = new byte[1024];
+		while((inp = socket.getInputStream().read(buffer))!=-1){
+			recv(new String(buffer,0,inp));
 		}
 		
 		Log.d("Bluetooth","BT handler out of loop");
@@ -55,7 +55,7 @@ public abstract class BluetoothServerHandler implements Callable<Void>{
 		
 	}
 	
-	protected abstract void recv(char c);
+	protected abstract void recv(String c);
 	
 	public void close(){
 		try {

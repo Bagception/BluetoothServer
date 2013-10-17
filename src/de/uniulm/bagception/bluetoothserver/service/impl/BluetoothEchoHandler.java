@@ -15,10 +15,10 @@ public class BluetoothEchoHandler extends BluetoothServerHandler{
 	}
 
 	@Override
-	protected void recv(char c) {
+	protected void recv(String c) {
 		Log.d("RECV",c+"");
 		try {
-			socket.getOutputStream().write((int) c);
+			socket.getOutputStream().write(c.getBytes());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
