@@ -1,6 +1,7 @@
 package de.uniulm.bagception.bluetooth.protocol;
 
-import android.util.Log;
+
+
 
 public class PayloadContentLengthProtocol {
 
@@ -9,47 +10,92 @@ public class PayloadContentLengthProtocol {
 	private int messageLength=-1;
 	private boolean headerRecv = false;
 	private final PayloadContentLengthProtocolCallback callback;
+	
+	
+	
 	public PayloadContentLengthProtocol(PayloadContentLengthProtocolCallback callback) {
 		head = new StringBuilder();
 		message = new StringBuilder();
 		this.callback=callback;
+		
 	}
 	
-	public void in(String c){
+	public synchronized void in(String c){
 		if (c.length()==0){
-			Log.d("RECV","len = 0");
 			return;
 		}
+		
 		if (headerRecv){
-			//header complete recv
-			int messageLength = message.length()+c.length(); //the length of the current  message + all currently recv bytes
-			if (messageLength<this.messageLength){
-				//all currently recv bytes are part of the message
-				message.append(c);
-			}else{
-				//the recv bytes contain a new message or is empty
-				int nextMessage = (messageLength - this.messageLength); //offset of the next message
-				int partMessageOnly = c.length()-nextMessage; //offset of the end of this message
-				
-				String partMessageOnlyString = c.substring(0,partMessageOnly); //the string that contains the rest of this message
-				message.append(partMessageOnlyString);
-				callback.onMessageRecv(message.toString());
-				message.setLength(0);
-				in(c.substring(partMessageOnly));
-			}
+			inMessage(c);
 		}else{
-			int headerSeparator = c.indexOf(':');
-			if (headerSeparator == -1){
-				head.append(c);
-			}else{
-				headerRecv=true;
-				String head = c.substring(0, headerSeparator);
-				String msgContinue = c.substring(headerSeparator+1);
-				this.head.append(head);
-				this.messageLength=Integer.parseInt(head.toString());
-				Log.d("RECV","messageLength "+messageLength);
-				in(msgContinue);
+			inHeader(c);
+		}
+	}
+	
+	private void inHeader(String h){
+
+		if (h.length()==0) return;
+		
+		//probing header 
+		if (head.length()==0){
+			try{
+				
+			}catch(NumberFormatException e){
+				reset();
+				return;
 			}
 		}
+		
+		int headerSeparator = h.indexOf(':');
+		
+		if (headerSeparator == -1){
+			head.append(h);
+		}else{
+			headerRecv=true;
+			String head = h.substring(0, headerSeparator);
+			String msgContinue = h.substring(headerSeparator+1);
+			this.head.append(head);
+			
+			try{
+				this.messageLength=Integer.parseInt(this.head.toString());	
+			}catch(NumberFormatException e){
+				reset();
+			}
+			inMessage(msgContinue);
+		}
+	}
+	
+	private void inMessage(String m){
+		if (m.length()==0)return;
+		headerRecv=false;
+		//header complete recv
+		int messageLength = message.length()+m.length(); //the length of the current  message + all currently recv bytes
+		if (messageLength<this.messageLength){
+			//all currently recv bytes are part of the message
+			headerRecv=true;
+			message.append(m);
+		}else{
+			//the recv bytes contain a new message or is empty
+			int partMessageOnly =  this.messageLength-message.length(); //offset of the next message
+			
+			String tail = m.substring(partMessageOnly);
+			String partMessageOnlyString = m.substring(0,partMessageOnly); //the string that contains the rest of this message
+			message.append(partMessageOnlyString);
+			callback.onMessageRecv(message.toString());
+			head.setLength(0);
+			message.setLength(0);
+			
+			inHeader(tail);
+
+		}
+	}
+	
+	
+	
+
+	private void reset(){
+		head.setLength(0);
+		message.setLength(0);
+		headerRecv=false;
 	}
 }
