@@ -7,7 +7,7 @@ import de.uniulm.bagception.bluetooth.protocol.messageLayer.PayloadContentLength
 import de.uniulm.bagception.bluetoothserver.service.BluetoothServerHandler;
 import de.uniulm.bagception.bluetoothserver.service.BluetoothServerService;
 
-public abstract class PayloadContentLengthProtocolHandler extends BluetoothServerHandler implements PayloadContentLengthProtocolCallback{
+public  class PayloadContentLengthProtocolHandler extends BluetoothServerHandler implements PayloadContentLengthProtocolCallback{
 	private final PayloadContentLengthProtocol pclp;
 
 	public PayloadContentLengthProtocolHandler(BluetoothServerService service,

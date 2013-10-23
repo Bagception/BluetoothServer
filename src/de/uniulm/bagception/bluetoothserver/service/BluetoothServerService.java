@@ -21,6 +21,7 @@ import de.philipphock.android.lib.services.observation.ObservableService;
 import de.uniulm.bagception.bluetooth.BagceptionBTServiceInterface;
 import de.uniulm.bagception.bluetoothserver.service.impl.BluetoothEchoHandler;
 import de.uniulm.bagception.bluetoothserver.service.impl.JSONCommandProtocolHandler;
+import de.uniulm.bagception.bluetoothserver.service.impl.PayloadContentLengthProtocolHandler;
 
 public class BluetoothServerService extends ObservableService implements Runnable, BagceptionBTServiceInterface {
 
@@ -62,7 +63,7 @@ public class BluetoothServerService extends ObservableService implements Runnabl
 			@Override
 			public BluetoothServerHandler createHandler(BluetoothServerService service,
 					BluetoothSocket socket) {
-				return new JSONCommandProtocolHandler(service,socket);
+				return new PayloadContentLengthProtocolHandler(service,socket);
 				//return new BluetoothEchoHandler(service, socket);
 			}
 		};
@@ -153,12 +154,13 @@ public class BluetoothServerService extends ObservableService implements Runnabl
 	
 	void unloadHandler(BluetoothServerHandler btsh){
 		handlermap.remove(btsh);
+		
 	}
 
 	
 	private void sendToAll(String s){
 		for (BluetoothServerHandler handler : handlermap.values()) {
-		    ((JSONCommandProtocolHandler)handler).send("test", s);
+		    ((PayloadContentLengthProtocolHandler)handler).send(s);
 		}
 	}
 }

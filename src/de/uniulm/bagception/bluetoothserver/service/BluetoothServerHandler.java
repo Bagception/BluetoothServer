@@ -39,7 +39,7 @@ public abstract class BluetoothServerHandler implements Callable<Void>{
 		clientConnected(false);
 	}
 
-	@Override
+	@Override 
 	public Void call() throws Exception {
 		Log.d("Bluetooth","BT handler active");
 		int inp;
@@ -73,7 +73,7 @@ public abstract class BluetoothServerHandler implements Callable<Void>{
 		try {
 			socket.getOutputStream().write(bytes);
 		} catch (IOException e) {
-			e.printStackTrace();
+			close();
 		}
 	}
 }
