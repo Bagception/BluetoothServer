@@ -116,7 +116,6 @@ public class BluetoothServerService extends ObservableService implements Runnabl
 	@Override
 	protected void onFirstInit() {
 		
-		Log.d("Bluetooth","Server init..");
 
 		BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 		if (bluetoothAdapter == null) {
@@ -134,7 +133,6 @@ public class BluetoothServerService extends ObservableService implements Runnabl
 
 		acceptThread = new Thread(this);
 		acceptThread.start();
-		Log.d("Bluetooth","Server init done");
 	}
 
 	
@@ -153,11 +151,7 @@ public class BluetoothServerService extends ObservableService implements Runnabl
 	
 	
 	void unloadHandler(BluetoothServerHandler btsh){
-		Log.d("bt","remove handler from map");
-		Log.d("bt"," "+handlermap.size()+" ");
-		handlermap.remove(btsh.toString());
-		Log.d("bt"," "+handlermap.size()+" "); 
-		
+		handlermap.remove(btsh.toString());		
 	}
 
 	

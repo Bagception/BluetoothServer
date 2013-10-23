@@ -157,15 +157,18 @@ public class BTServerController extends Activity implements ServiceObservationRe
 
 	 
 	private void startStopService(){
-		Button startStopButton = (Button) findViewById(R.id.startStopBTServer);
-		
-		if(startStopButton.getText().equals("stop server")){
-			Intent i = new Intent(this,BluetoothServerService.class);
-			stopService(i);	
+
+		Intent i = new Intent(this,BluetoothServerService.class);
+		if (ServiceUtil.isServiceRunning(this, BluetoothServerService.class)){
+			if (isConnectedWithService){
+				isConnectedWithService=false;
+				unbindService(sconn);
+			}
+			stopService(i);
 		}else{
-			Intent i = new Intent(this,BluetoothServerService.class);
-			startService(i);
+			startService(i);	
 		}
+		
 		
 		
 	}
@@ -255,9 +258,6 @@ public class BTServerController extends Activity implements ServiceObservationRe
 		public void onServiceConnected(ComponentName name, IBinder service) {
 			serviceMessenger = new Messenger(service);
 			isConnectedWithService = true;
-			
-
-			
 		}
 	};
 	
