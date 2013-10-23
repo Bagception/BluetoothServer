@@ -3,15 +3,23 @@ package de.uniulm.bagception.ui;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
+import android.os.RemoteException;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import de.philipphock.android.lib.services.ServiceUtil;
 import de.philipphock.android.lib.services.observation.ServiceObservationActor;
@@ -25,6 +33,19 @@ import de.uniulm.bagception.bluetoothserver.service.BluetoothServerService;
 public class BTServerController extends Activity implements ServiceObservationReactor, BluetoothStateChangeReactor{
 	private ServiceObservationActor soActor;
 	private BluetoothStateActor btStateActor;
+	private boolean isConnectedWithService=false;
+	private Messenger serviceMessenger;
+//	//###### IPC ######\\
+//	private Handler incomingHandler = new Handler(new Handler.Callback() {
+//		
+//		@Override
+//		public boolean handleMessage(Message msg) {
+//			return false;
+//		}
+//	});
+//	//###### /IPC ######\\
+    
+    
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -68,6 +89,21 @@ public class BTServerController extends Activity implements ServiceObservationRe
 		return true;
 	}
 	
+	//UI Callbacks
+
+	public void onSendBtn(View v) {
+		EditText toSendTxt = (EditText) findViewById(R.id.toSendTxt);
+		String txt=toSendTxt.getText().toString();
+		Message m = Message.obtain(null,BluetoothServerService.MESSAGE_TYPE_SENDMESSAGE,txt);
+		try {
+			Log.d("bt","sending");
+			serviceMessenger.send(m);
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
+		
+	}
+	
 	public void onStartStopServerClicket(View v) {
 		if (!BluetoothAdapter.getDefaultAdapter().isEnabled()){
 			startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE), 1);
@@ -81,15 +117,7 @@ public class BTServerController extends Activity implements ServiceObservationRe
 
 	}
 
-	@Override
-	public void onServiceStarted(String serviceName) {
-		TextView v = (TextView)findViewById(R.id.serverStatus);
-		v.setTextColor(Color.GREEN);
-		v.setText("online");
-		
-		Button startStopButton = (Button) findViewById(R.id.startStopBTServer);
-		startStopButton.setText("stop server");
-	}
+	
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -101,6 +129,18 @@ public class BTServerController extends Activity implements ServiceObservationRe
 	}
 	
 	@Override
+	public void onServiceStarted(String serviceName) {
+		TextView v = (TextView)findViewById(R.id.serverStatus);
+		v.setTextColor(Color.GREEN);
+		v.setText("online");
+		
+		Button startStopButton = (Button) findViewById(R.id.startStopBTServer);
+		startStopButton.setText("stop server");
+		
+		bindService(new Intent(this,BluetoothServerService.class),sconn,Context.BIND_AUTO_CREATE);
+	}
+	
+	@Override
 	public void onServiceStopped(String serviceName) {
 
 		TextView v = (TextView)findViewById(R.id.serverStatus);
@@ -109,7 +149,8 @@ public class BTServerController extends Activity implements ServiceObservationRe
 		
 		Button startStopButton = (Button) findViewById(R.id.startStopBTServer);
 		startStopButton.setText("start server");
-
+		if(isConnectedWithService)
+			unbindService(sconn);
 		
 		
 	}
@@ -200,4 +241,24 @@ public class BTServerController extends Activity implements ServiceObservationRe
 	};
 	
 
+	//IPC using messenger
+	
+	ServiceConnection sconn = new ServiceConnection() {
+		
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+			serviceMessenger = null;
+			isConnectedWithService = false;
+		}
+		
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			serviceMessenger = new Messenger(service);
+			isConnectedWithService = true;
+			
+
+			
+		}
+	};
+	
 }

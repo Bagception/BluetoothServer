@@ -1,6 +1,7 @@
 package de.uniulm.bagception.bluetoothserver.service;
 
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -11,14 +12,20 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
 import android.util.Log;
 import de.philipphock.android.lib.services.observation.ObservableService;
 import de.uniulm.bagception.bluetooth.BagceptionBTServiceInterface;
+import de.uniulm.bagception.bluetoothserver.service.impl.BluetoothEchoHandler;
 import de.uniulm.bagception.bluetoothserver.service.impl.JSONCommandProtocolHandler;
 
 public class BluetoothServerService extends ObservableService implements Runnable, BagceptionBTServiceInterface {
 
+	public static final int MESSAGE_TYPE_SENDMESSAGE=1;
+	
 	private Thread acceptThread;
 	private boolean keepAlive = true;
 
@@ -33,13 +40,30 @@ public class BluetoothServerService extends ObservableService implements Runnabl
 
 	private final HandlerFactory handlerFactory;
     
+	//IPC
+	private final Messenger incomingMessenger;
+    private final Handler incomingHandler = new Handler(new Handler.Callback() {
+		
+		@Override
+		public boolean handleMessage(Message msg) {
+			switch(msg.what){
+				case MESSAGE_TYPE_SENDMESSAGE:
+					sendToAll((String)msg.obj);
+					break;
+			}
+			return true;
+		}
+	});
+    
     public BluetoothServerService() {
+    	incomingMessenger = new Messenger(incomingHandler);
     	this.handlerFactory = new HandlerFactory() {
 			
 			@Override
 			public BluetoothServerHandler createHandler(BluetoothServerService service,
 					BluetoothSocket socket) {
 				return new JSONCommandProtocolHandler(service,socket);
+				//return new BluetoothEchoHandler(service, socket);
 			}
 		};
     	executor = new ThreadPoolExecutor(executorCorePoolSize, executorMaxPoolSize, executorKeepAliveTime, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(2));
@@ -51,7 +75,7 @@ public class BluetoothServerService extends ObservableService implements Runnabl
 	/* ============ Service ============== */
 	@Override
 	public IBinder onBind(Intent arg0) {
-		return null;
+		return incomingMessenger.getBinder();
 	}
 
 	
@@ -131,4 +155,10 @@ public class BluetoothServerService extends ObservableService implements Runnabl
 		handlermap.remove(btsh);
 	}
 
+	
+	private void sendToAll(String s){
+		for (BluetoothServerHandler handler : handlermap.values()) {
+		    ((JSONCommandProtocolHandler)handler).send("test", s);
+		}
+	}
 }

@@ -44,7 +44,9 @@ public abstract class BluetoothServerHandler implements Callable<Void>{
 		Log.d("Bluetooth","BT handler active");
 		int inp;
 		byte[] buffer = new byte[1024];
-		while((inp = socket.getInputStream().read(buffer))!=-1){
+		while(true){
+			inp = socket.getInputStream().read(buffer);
+			if (inp==-1)break;
 			recv(new String(buffer,0,inp));
 		}
 		
