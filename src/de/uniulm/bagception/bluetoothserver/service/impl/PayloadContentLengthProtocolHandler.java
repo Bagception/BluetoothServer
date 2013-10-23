@@ -2,8 +2,8 @@ package de.uniulm.bagception.bluetoothserver.service.impl;
 
 import android.bluetooth.BluetoothSocket;
 import android.util.Log;
-import de.uniulm.bagception.bluetooth.protocol.PayloadContentLengthProtocol;
-import de.uniulm.bagception.bluetooth.protocol.PayloadContentLengthProtocolCallback;
+import de.uniulm.bagception.bluetooth.protocol.messageLayer.PayloadContentLengthProtocol;
+import de.uniulm.bagception.bluetooth.protocol.messageLayer.PayloadContentLengthProtocolCallback;
 import de.uniulm.bagception.bluetoothserver.service.BluetoothServerHandler;
 import de.uniulm.bagception.bluetoothserver.service.BluetoothServerService;
 
@@ -23,6 +23,10 @@ public abstract class PayloadContentLengthProtocolHandler extends BluetoothServe
 	}
 
 	
+	public void send(String message){
+		String pmessage=pclp.out(message);
+		this.send(pmessage.getBytes());
+	}
 	
 	public  void onMessageRecv(String message){
 		Log.d("PROTOCOL","MSG: "+message);

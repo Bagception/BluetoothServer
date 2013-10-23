@@ -15,16 +15,13 @@ import android.os.IBinder;
 import android.util.Log;
 import de.philipphock.android.lib.services.observation.ObservableService;
 import de.uniulm.bagception.bluetooth.BagceptionBTServiceInterface;
-import de.uniulm.bagception.bluetoothserver.service.impl.BluetoothEchoHandler;
+import de.uniulm.bagception.bluetoothserver.service.impl.JSONCommandProtocolHandler;
 
 public class BluetoothServerService extends ObservableService implements Runnable, BagceptionBTServiceInterface {
 
-	private final int REQUEST_ENABLE_BT = 0;
 	private Thread acceptThread;
 	private boolean keepAlive = true;
-    private BluetoothServerSocket mmServerSocket;
-    
-    private final int threadpool_thread=5;
+
     private final int executorCorePoolSize = 1;
     private final int executorMaxPoolSize = 10;
     private final int executorKeepAliveTime = 10;
@@ -34,8 +31,17 @@ public class BluetoothServerService extends ObservableService implements Runnabl
 	
 	private ConcurrentHashMap<String, BluetoothServerHandler> handlermap;
 
+	private final HandlerFactory handlerFactory;
     
     public BluetoothServerService() {
+    	this.handlerFactory = new HandlerFactory() {
+			
+			@Override
+			public BluetoothServerHandler createHandler(BluetoothServerService service,
+					BluetoothSocket socket) {
+				return new JSONCommandProtocolHandler(service,socket);
+			}
+		};
     	executor = new ThreadPoolExecutor(executorCorePoolSize, executorMaxPoolSize, executorKeepAliveTime, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(2));
 	}
     
@@ -58,17 +64,13 @@ public class BluetoothServerService extends ObservableService implements Runnabl
 
 	@Override
 	public void run() {
-		Log.d("Bluetooth","goto run");
 		BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 		try {
 			currWaitingSocket = bluetoothAdapter.listenUsingRfcommWithServiceRecord(BT_SERVICE_NAME, UUID.fromString(BT_UUID));
 			while (keepAlive){
-				Log.d("Bluetooth","in loop");
 				
-				Log.d("Bluetooth","Waiting for connection");
 				BluetoothSocket acceptedSocket = currWaitingSocket.accept();
-				Log.d("Bluetooth","connection accepted");
-				BluetoothServerHandler h = new BluetoothEchoHandler(this,acceptedSocket);
+				BluetoothServerHandler h = handlerFactory.createHandler(this,acceptedSocket);
 				handlermap.put(h.toString(),h);
 				executor.submit(h);
 				
@@ -79,11 +81,9 @@ public class BluetoothServerService extends ObservableService implements Runnabl
 		
 		
 		for (BluetoothServerHandler handler : handlermap.values()) {
-			Log.d("BT","Handler close");
 		    handler.close();
 		}
 		handlermap.clear();
-		Log.d("BTS","servier shutdown");
 	}
 	
 

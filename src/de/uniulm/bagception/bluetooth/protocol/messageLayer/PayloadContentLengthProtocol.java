@@ -1,4 +1,4 @@
-package de.uniulm.bagception.bluetooth.protocol;
+package de.uniulm.bagception.bluetooth.protocol.messageLayer;
 
 
 
@@ -90,6 +90,12 @@ public class PayloadContentLengthProtocol {
 		}
 	}
 	
+	public String out(String msg){
+		int l = msg.length();
+		StringBuilder sb = new StringBuilder(msg.length()+4);
+		sb.append(l+":"+msg);
+		return sb.toString();
+	}
 	
 	
 

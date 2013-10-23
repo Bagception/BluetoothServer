@@ -1,4 +1,4 @@
-package de.uniulm.bagception.bluetooth.protocol;
+package de.uniulm.bagception.bluetooth.protocol.messageLayer;
 
 
 public interface PayloadContentLengthProtocolCallback {
