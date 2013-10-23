@@ -153,7 +153,10 @@ public class BluetoothServerService extends ObservableService implements Runnabl
 	
 	
 	void unloadHandler(BluetoothServerHandler btsh){
-		handlermap.remove(btsh);
+		Log.d("bt","remove handler from map");
+		Log.d("bt"," "+handlermap.size()+" ");
+		handlermap.remove(btsh.toString());
+		Log.d("bt"," "+handlermap.size()+" "); 
 		
 	}
 

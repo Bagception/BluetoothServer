@@ -7,59 +7,69 @@ import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.util.Log;
 
-public abstract class BluetoothServerHandler implements Callable<Void>{
+public abstract class BluetoothServerHandler implements Callable<Void> {
 
-	public static final String BROADCAST_CLIENTS_CONNECTION_UPDATE = "de.uniulm.bagception.bluetoothserver.service.BluetoothServerHandler.clientsconnectedupdate"; 
-	
+	public static final String BROADCAST_CLIENTS_CONNECTION_UPDATE = "de.uniulm.bagception.bluetoothserver.service.BluetoothServerHandler.clientsconnectedupdate";
+
 	protected final BluetoothServerService service;
 	protected final BluetoothSocket socket;
-	
-	private static volatile int clientsConnected=0;
-	
-	public static int getClientsConnected(){
+
+	private static volatile int clientsConnected = 0;
+
+	public static int getClientsConnected() {
 		return clientsConnected;
 	}
-	
-	private void clientConnected(boolean disconnect){
-		if(disconnect){
+
+	private void clientConnected(boolean disconnect) {
+		if (disconnect) {
 			clientsConnected--;
-		}else{
+		} else {
 			clientsConnected++;
 		}
-		
+
 		Intent intent = new Intent();
 		intent.setAction(BROADCAST_CLIENTS_CONNECTION_UPDATE);
 		service.sendBroadcast(intent);
 	}
-	
-	public BluetoothServerHandler(BluetoothServerService service,BluetoothSocket socket) {
-		this.service=service;
+
+	public BluetoothServerHandler(BluetoothServerService service,
+			BluetoothSocket socket) {
+		this.service = service;
 		this.socket = socket;
-		
+
 		clientConnected(false);
 	}
 
-	@Override 
-	public Void call() throws Exception {
-		Log.d("Bluetooth","BT handler active");
+	@Override
+	public Void call() {
+		Log.d("Bluetooth", "BT handler active");
 		int inp;
 		byte[] buffer = new byte[1024];
-		while(true){
-			inp = socket.getInputStream().read(buffer);
-			if (inp==-1)break;
-			recv(new String(buffer,0,inp));
-		}
-		
-		Log.d("Bluetooth","BT handler out of loop");
+		try {
+			while (true) {
 
-		close();
+				inp = socket.getInputStream().read(buffer);
+				if (inp == -1)
+					break;
+				recv(new String(buffer, 0, inp));
+
+			}
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			Log.d("Bluetooth", "BT handler out of loop");
+			close();
+
+		}
+
 		return null;
-		
+
 	}
-	
+
 	protected abstract void recv(String c);
-	
-	public void close(){
+
+	public synchronized void close() {
 		try {
 			socket.close();
 		} catch (IOException e) {
@@ -68,8 +78,8 @@ public abstract class BluetoothServerHandler implements Callable<Void>{
 		clientConnected(true);
 		service.unloadHandler(this);
 	}
-	
-	public void send(byte[] bytes){
+
+	public void send(byte[] bytes) {
 		try {
 			socket.getOutputStream().write(bytes);
 		} catch (IOException e) {
