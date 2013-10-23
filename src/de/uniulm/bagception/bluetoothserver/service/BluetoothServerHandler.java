@@ -42,11 +42,12 @@ public abstract class BluetoothServerHandler implements Callable<Void> {
 
 	@Override
 	public Void call() {
+		boolean running=true;
 		Log.d("Bluetooth", "BT handler active");
 		int inp;
 		byte[] buffer = new byte[1024];
 		try {
-			while (true) {
+			while (running) {
 
 				inp = socket.getInputStream().read(buffer);
 				if (inp == -1)
@@ -59,7 +60,9 @@ public abstract class BluetoothServerHandler implements Callable<Void> {
 			e.printStackTrace();
 		} finally {
 			Log.d("Bluetooth", "BT handler out of loop");
+			running=false;
 			close();
+			
 
 		}
 
