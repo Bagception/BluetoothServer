@@ -1,6 +1,7 @@
 package de.uniulm.bagception.bluetoothserver.service.impl;
 
 import android.bluetooth.BluetoothSocket;
+import android.os.Bundle;
 import android.util.Log;
 import de.uniulm.bagception.bluetooth.protocol.commandLayer.JSONCommandProtocol;
 import de.uniulm.bagception.bluetooth.protocol.commandLayer.JSONCommandProtocolCallback;
@@ -25,8 +26,11 @@ public class JSONCommandProtocolHandler extends PayloadContentLengthProtocolHand
 	
 	@Override
 	public void onCommandRecv(String cmd, String payload) {
-		Log.d("bt","cmd: "+cmd+";; payload: "+payload);
+		Bundle b = new Bundle();
+		b.putString("cmd", cmd);
+		b.putString("payload", payload);
 		
+		service.sendToBoundHandler(this, b);
 	}
 	
 	

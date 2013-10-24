@@ -12,19 +12,23 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
+import android.os.RemoteException;
 import android.util.Log;
+import de.philipphock.android.lib.services.messenger.MessengerService;
 import de.philipphock.android.lib.services.observation.ObservableService;
 import de.uniulm.bagception.bluetooth.BagceptionBTServiceInterface;
 import de.uniulm.bagception.bluetoothserver.service.impl.BluetoothEchoHandler;
 import de.uniulm.bagception.bluetoothserver.service.impl.JSONCommandProtocolHandler;
 import de.uniulm.bagception.bluetoothserver.service.impl.PayloadContentLengthProtocolHandler;
 
-public class BluetoothServerService extends ObservableService implements Runnable, BagceptionBTServiceInterface {
-
+public class BluetoothServerService extends MessengerService implements Runnable, BagceptionBTServiceInterface {
+	private final String TAG = getClass().getName();
+	
 	public static final int MESSAGE_TYPE_SENDMESSAGE=1;
 	
 	private Thread acceptThread;
@@ -41,43 +45,26 @@ public class BluetoothServerService extends ObservableService implements Runnabl
 
 	private final HandlerFactory handlerFactory;
     
-	//IPC
-	private final Messenger incomingMessenger;
-    private final Handler incomingHandler = new Handler(new Handler.Callback() {
-		
-		@Override
-		public boolean handleMessage(Message msg) {
-			switch(msg.what){
-				case MESSAGE_TYPE_SENDMESSAGE:
-					sendToAll((String)msg.obj);
-					break;
-			}
-			return true;
-		}
-	});
+	public static final int MESSAGE_HANDLER_RECV=0;
+	
+
     
     public BluetoothServerService() {
-    	incomingMessenger = new Messenger(incomingHandler);
     	this.handlerFactory = new HandlerFactory() {
 			
 			@Override
 			public BluetoothServerHandler createHandler(BluetoothServerService service,
 					BluetoothSocket socket) {
-				return new PayloadContentLengthProtocolHandler(service,socket);
+				//return new PayloadContentLengthProtocolHandler(service,socket);
+				return new JSONCommandProtocolHandler(service,socket);
 				//return new BluetoothEchoHandler(service, socket);
 			}
 		};
     	executor = new ThreadPoolExecutor(executorCorePoolSize, executorMaxPoolSize, executorKeepAliveTime, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(2));
 	}
     
-	/* ============ BluetoothServerServiceControlInterface ============== */
-	
 
 	/* ============ Service ============== */
-	@Override
-	public IBinder onBind(Intent arg0) {
-		return incomingMessenger.getBinder();
-	}
 
 	
 	@Override
@@ -155,9 +142,38 @@ public class BluetoothServerService extends ObservableService implements Runnabl
 	}
 
 	
-	private void sendToAll(String s){
+	/**
+	 * Sends a String to all Handler, 
+	 * the handler will then send this to their remote devices
+	 * @param s the string to send
+	 */
+	private void allHandlerSendToRemoteDevice(String cmd,String payload){
 		for (BluetoothServerHandler handler : handlermap.values()) {
-		    ((PayloadContentLengthProtocolHandler)handler).send(s);
+			JSONCommandProtocolHandler handlerCasted = ((JSONCommandProtocolHandler)handler); 
+		    handlerCasted.send(cmd,payload);
+		}
+	}
+	
+
+	/**
+	 * Sends messages to bound activities
+	 * @param h the handler that sends the message
+	 * @param b data
+	 */
+	public void sendToBoundHandler(BluetoothServerHandler h,Bundle b){
+		
+		Message m = Message.obtain(null, MESSAGE_HANDLER_RECV);
+		m.setData(b);
+		sendToClients(m);
+	}
+	
+
+	@Override
+	protected void handleMessage(Message m) {
+		switch (m.what){
+		case MESSAGE_TYPE_SENDMESSAGE:
+			allHandlerSendToRemoteDevice("test",(String)m.obj);
+			break;
 		}
 	}
 }

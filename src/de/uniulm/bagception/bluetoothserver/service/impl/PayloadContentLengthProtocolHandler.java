@@ -25,11 +25,11 @@ public  class PayloadContentLengthProtocolHandler extends BluetoothServerHandler
 	
 	public void send(String message){
 		String pmessage=pclp.out(message);
+		Log.d("PayloadContentLengthProtoocolHandler",pmessage);
 		this.send(pmessage.getBytes());
 	}
 	
 	public  void onMessageRecv(String message){
-		Log.d("PROTOCOL","MSG: "+message);
 	}
 
 }

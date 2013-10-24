@@ -21,6 +21,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 import de.philipphock.android.lib.services.ServiceUtil;
 import de.philipphock.android.lib.services.messenger.MessengerService;
 import de.philipphock.android.lib.services.observation.ServiceObservationActor;
@@ -32,6 +33,8 @@ import de.uniulm.bagception.bluetoothserver.service.BluetoothServerHandler;
 import de.uniulm.bagception.bluetoothserver.service.BluetoothServerService;
 
 public class BTServerController extends Activity implements ServiceObservationReactor, BluetoothStateChangeReactor{
+	public final String TAG = getClass().getName(); 
+	
 	private ServiceObservationActor soActor;
 	private BluetoothStateActor btStateActor;
 	private boolean isConnectedWithService=false;
@@ -87,9 +90,9 @@ public class BTServerController extends Activity implements ServiceObservationRe
 	public void onSendBtn(View v) {
 		EditText toSendTxt = (EditText) findViewById(R.id.toSendTxt);
 		String txt=toSendTxt.getText().toString();
+		Bundle b = new Bundle();
 		Message m = Message.obtain(null,BluetoothServerService.MESSAGE_TYPE_SENDMESSAGE,txt);
 		try {
-			Log.d("bt","sending");
 			serviceMessenger.send(m);
 		} catch (RemoteException e) {
 			e.printStackTrace();
@@ -152,10 +155,7 @@ public class BTServerController extends Activity implements ServiceObservationRe
 
 		Intent i = new Intent(this,BluetoothServerService.class);
 		if (ServiceUtil.isServiceRunning(this, BluetoothServerService.class)){
-			if (isConnectedWithService){
-				isConnectedWithService=false;
-				unbindService(sconn);
-			}
+			doUnbindService();
 			stopService(i);
 		}else{
 			startService(i);	
@@ -269,6 +269,12 @@ public class BTServerController extends Activity implements ServiceObservationRe
 		
 		@Override
 		public boolean handleMessage(Message msg) {
+			Log.d(TAG,"handle "+msg.toString());
+			
+			String cmd = msg.getData().getString("cmd");
+			String payload = msg.getData().getString("payload");
+			
+			Toast.makeText(BTServerController.this, payload, Toast.LENGTH_SHORT).show();
 			return false;
 		}
 	});
