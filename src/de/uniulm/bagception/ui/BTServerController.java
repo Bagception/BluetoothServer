@@ -22,6 +22,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import de.philipphock.android.lib.services.ServiceUtil;
+import de.philipphock.android.lib.services.messenger.MessengerService;
 import de.philipphock.android.lib.services.observation.ServiceObservationActor;
 import de.philipphock.android.lib.services.observation.ServiceObservationReactor;
 import de.uniulm.bagception.bluetoothserver.R;
@@ -34,16 +35,8 @@ public class BTServerController extends Activity implements ServiceObservationRe
 	private ServiceObservationActor soActor;
 	private BluetoothStateActor btStateActor;
 	private boolean isConnectedWithService=false;
-	private Messenger serviceMessenger;
-//	//###### IPC ######\\
-//	private Handler incomingHandler = new Handler(new Handler.Callback() {
-//		
-//		@Override
-//		public boolean handleMessage(Message msg) {
-//			return false;
-//		}
-//	});
-//	//###### /IPC ######\\
+	private Messenger serviceMessenger; //send messages  to the server
+
     
     
 	
@@ -149,8 +142,7 @@ public class BTServerController extends Activity implements ServiceObservationRe
 		
 		Button startStopButton = (Button) findViewById(R.id.startStopBTServer);
 		startStopButton.setText("start server");
-		if(isConnectedWithService)
-			unbindService(sconn);
+		doUnbindService();
 		
 		
 	}
@@ -258,7 +250,56 @@ public class BTServerController extends Activity implements ServiceObservationRe
 		public void onServiceConnected(ComponentName name, IBinder service) {
 			serviceMessenger = new Messenger(service);
 			isConnectedWithService = true;
+			
+			// We want to monitor the service for as long as we are
+            // connected to it.
+            try {
+                Message msg = Message.obtain(null,
+                        MessengerService.MSG_REGISTER_CLIENT);
+                msg.replyTo = incomingMessenger;
+                serviceMessenger.send(msg);
+            } catch (RemoteException e) {
+            	e.printStackTrace();
+            }
 		}
 	};
+	
+	//###### IPC ######\\
+	private final Handler incomingHandler = new Handler(new Handler.Callback() {
+		
+		@Override
+		public boolean handleMessage(Message msg) {
+			return false;
+		}
+	});
+	
+	//delivered to the server, handles incoming messages
+	private final Messenger incomingMessenger = new Messenger(incomingHandler);
+	
+	
+	public void doUnbindService() {
+        if (isConnectedWithService) {
+            // If we have received the service, and hence registered with
+            // it, then now is the time to unregister.
+            if (serviceMessenger != null) {
+                try {
+                    Message msg = Message.obtain(null,
+                            MessengerService.MSG_UNREGISTER_CLIENT);
+                    msg.replyTo = incomingMessenger;
+                    serviceMessenger.send(msg);
+                } catch (RemoteException e) {
+                    // There is nothing special we need to do if the service
+                    // has crashed.
+                }
+            }
+            
+            // Detach our existing connection.
+            unbindService(sconn);
+            isConnectedWithService = false;
+            
+        }
+    }
+	
+	//###### /IPC ######\\
 	
 }
