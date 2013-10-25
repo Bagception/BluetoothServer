@@ -271,10 +271,8 @@ public class BTServerController extends Activity implements ServiceObservationRe
 		public boolean handleMessage(Message msg) {
 			Log.d(TAG,"handle "+msg.toString());
 			
-			String cmd = msg.getData().getString("cmd");
-			String payload = msg.getData().getString("payload");
 			
-			Toast.makeText(BTServerController.this, payload, Toast.LENGTH_SHORT).show();
+			Toast.makeText(BTServerController.this, msg.getData().toString(), Toast.LENGTH_SHORT).show();
 			return false;
 		}
 	});

@@ -23,6 +23,7 @@ import de.philipphock.android.lib.services.messenger.MessengerService;
 import de.philipphock.android.lib.services.observation.ObservableService;
 import de.uniulm.bagception.bluetooth.BagceptionBTServiceInterface;
 import de.uniulm.bagception.bluetoothserver.service.impl.BluetoothEchoHandler;
+import de.uniulm.bagception.bluetoothserver.service.impl.BundleProtocolHandler;
 import de.uniulm.bagception.bluetoothserver.service.impl.JSONCommandProtocolHandler;
 import de.uniulm.bagception.bluetoothserver.service.impl.PayloadContentLengthProtocolHandler;
 
@@ -55,9 +56,9 @@ public class BluetoothServerService extends MessengerService implements Runnable
 			@Override
 			public BluetoothServerHandler createHandler(BluetoothServerService service,
 					BluetoothSocket socket) {
-				//return new PayloadContentLengthProtocolHandler(service,socket);
-				return new JSONCommandProtocolHandler(service,socket);
-				//return new BluetoothEchoHandler(service, socket);
+				
+				return new BundleProtocolHandler(service,socket);
+				
 			}
 		};
     	executor = new ThreadPoolExecutor(executorCorePoolSize, executorMaxPoolSize, executorKeepAliveTime, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(2));
@@ -147,10 +148,10 @@ public class BluetoothServerService extends MessengerService implements Runnable
 	 * the handler will then send this to their remote devices
 	 * @param s the string to send
 	 */
-	private void allHandlerSendToRemoteDevice(String cmd,String payload){
+	private void allHandlerSendToRemoteDevice(Bundle b){
 		for (BluetoothServerHandler handler : handlermap.values()) {
-			JSONCommandProtocolHandler handlerCasted = ((JSONCommandProtocolHandler)handler); 
-		    handlerCasted.send(cmd,payload);
+			BundleProtocolHandler handlerCasted = ((BundleProtocolHandler)handler); 
+		    handlerCasted.send(b);
 		}
 	}
 	
@@ -172,7 +173,7 @@ public class BluetoothServerService extends MessengerService implements Runnable
 	protected void handleMessage(Message m) {
 		switch (m.what){
 		case MESSAGE_TYPE_SENDMESSAGE:
-			allHandlerSendToRemoteDevice("test",(String)m.obj);
+			allHandlerSendToRemoteDevice(m.getData());
 			break;
 		}
 	}
