@@ -13,6 +13,7 @@ import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Message;
+import de.philipphock.android.lib.logging.LOG;
 import de.philipphock.android.lib.services.messenger.MessengerService;
 import de.uniulm.bagception.bluetooth.BagceptionBTServiceInterface;
 import de.uniulm.bagception.bluetoothserver.service.impl.BundleProtocolHandler;
@@ -92,7 +93,7 @@ public class BluetoothServerService extends MessengerService implements Runnable
 	
 	@Override
 	protected void onFirstInit() {
-		
+		LOG.out(this,"Service init");
 
 		BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 		if (bluetoothAdapter == null) {

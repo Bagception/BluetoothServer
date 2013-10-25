@@ -3,13 +3,15 @@ package de.uniulm.bagception.bluetoothserver.service;
 import java.io.IOException;
 import java.util.concurrent.Callable;
 
+import de.uniulm.bagception.bluetooth.BagceptionBTServiceInterface;
+import de.uniulm.bagception.broadcastconstants.BagceptionBroadcastContants;
+
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.util.Log;
 
 public abstract class BluetoothServerHandler implements Callable<Void> {
 
-	public static final String BROADCAST_CLIENTS_CONNECTION_UPDATE = "de.uniulm.bagception.bluetoothserver.service.BluetoothServerHandler.clientsconnectedupdate";
 
 	protected final BluetoothServerService service;
 	protected final BluetoothSocket socket;
@@ -28,7 +30,7 @@ public abstract class BluetoothServerHandler implements Callable<Void> {
 		}
 
 		Intent intent = new Intent();
-		intent.setAction(BROADCAST_CLIENTS_CONNECTION_UPDATE);
+		intent.setAction(BagceptionBroadcastContants.BROADCAST_CLIENTS_CONNECTION_UPDATE);
 		service.sendBroadcast(intent);
 	}
 

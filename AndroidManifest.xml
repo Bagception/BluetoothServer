@@ -15,16 +15,17 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
-        <activity
-            android:name="de.uniulm.bagception.ui.BTServerController"
-            android:label="@string/app_name" >
+        
+        <service android:name=".service.BluetoothServerService"
+                 android:process=":BluetoothServerServiceProcess" 
+            >
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-        <service android:name=".service.BluetoothServerService"></service>
+             <action android:name="de.uniulm.bagception.bluetoothserver.service.BluetoothServerService" >
+             </action>
+          </intent-filter>
+            
+        </service>
     </application>
 
 </manifest>
+

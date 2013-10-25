@@ -2,10 +2,10 @@ package de.uniulm.bagception.bluetoothserver.service.impl;
 
 import android.bluetooth.BluetoothSocket;
 import android.util.Log;
-import de.uniulm.bagception.bluetooth.protocol.messageLayer.PayloadContentLengthProtocol;
-import de.uniulm.bagception.bluetooth.protocol.messageLayer.PayloadContentLengthProtocolCallback;
 import de.uniulm.bagception.bluetoothserver.service.BluetoothServerHandler;
 import de.uniulm.bagception.bluetoothserver.service.BluetoothServerService;
+import de.uniulm.bagception.protocol.message.PayloadContentLengthProtocol;
+import de.uniulm.bagception.protocol.message.PayloadContentLengthProtocolCallback;
 
 public  class PayloadContentLengthProtocolHandler extends BluetoothServerHandler implements PayloadContentLengthProtocolCallback{
 	private final PayloadContentLengthProtocol pclp;

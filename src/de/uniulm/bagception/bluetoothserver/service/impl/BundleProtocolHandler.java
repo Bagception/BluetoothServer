@@ -2,9 +2,9 @@ package de.uniulm.bagception.bluetoothserver.service.impl;
 
 import android.bluetooth.BluetoothSocket;
 import android.os.Bundle;
-import de.uniulm.bagception.bluetooth.protocol.commandLayer.bundle.BundleProtocol;
-import de.uniulm.bagception.bluetooth.protocol.commandLayer.bundle.BundleProtocolCallback;
 import de.uniulm.bagception.bluetoothserver.service.BluetoothServerService;
+import de.uniulm.bagception.protocol.bundle.BundleProtocol;
+import de.uniulm.bagception.protocol.bundle.BundleProtocolCallback;
 
 public class BundleProtocolHandler extends PayloadContentLengthProtocolHandler implements BundleProtocolCallback{
 
