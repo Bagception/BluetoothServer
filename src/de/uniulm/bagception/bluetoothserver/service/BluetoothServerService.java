@@ -10,13 +10,17 @@ import java.util.concurrent.TimeUnit;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Message;
 import de.philipphock.android.lib.logging.LOG;
 import de.philipphock.android.lib.services.messenger.MessengerService;
 import de.uniulm.bagception.bluetooth.BagceptionBTServiceInterface;
 import de.uniulm.bagception.bluetoothserver.service.impl.BundleProtocolHandler;
+import de.uniulm.bagception.bluetoothservermessengercommunication.MessengerConstants;
 import de.uniulm.bagception.broadcastconstants.BagceptionBroadcastContants;
 
 public class BluetoothServerService extends MessengerService implements Runnable, BagceptionBTServiceInterface {
@@ -37,8 +41,7 @@ public class BluetoothServerService extends MessengerService implements Runnable
 
 	private final HandlerFactory handlerFactory;
     
-	public static final int MESSAGE_HANDLER_RECV=0;
-	
+
 
     
     public BluetoothServerService() {
@@ -97,6 +100,9 @@ public class BluetoothServerService extends MessengerService implements Runnable
 	protected void onFirstInit() {
 		LOG.out(this,"Service init");
 
+		IntentFilter register = new IntentFilter(BagceptionBroadcastContants.BROADCAST_CLIENTS_CONNECTION_UPDATE_REQUEST);
+		registerReceiver(statusRequestRecv, register);
+		
 		BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 		if (bluetoothAdapter == null) {
 		    // Device does not support Bluetooth
@@ -125,6 +131,7 @@ public class BluetoothServerService extends MessengerService implements Runnable
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		unregisterReceiver(statusRequestRecv);
 		super.onDestroy();
 	}
 
@@ -156,7 +163,7 @@ public class BluetoothServerService extends MessengerService implements Runnable
 	 */
 	public void sendToBoundHandler(BluetoothServerHandler h,Bundle b){
 		
-		Message m = Message.obtain(null, MESSAGE_HANDLER_RECV);
+		Message m = Message.obtain(null, MessengerConstants.MESSAGE_BUNDLE_MESSAGE);
 		m.setData(b);
 		sendToClients(m);
 	}
@@ -165,9 +172,10 @@ public class BluetoothServerService extends MessengerService implements Runnable
 	@Override
 	protected void handleMessage(Message m) {
 		switch (m.what){
-		case MESSAGE_TYPE_SENDMESSAGE:
+		case MessengerConstants.MESSAGE_BUNDLE_MESSAGE:
 			allHandlerSendToRemoteDevice(m.getData());
 			break;
+
 		}
 	}
 	
@@ -177,4 +185,13 @@ public class BluetoothServerService extends MessengerService implements Runnable
 		intent.putExtra(BagceptionBroadcastContants.BROADCAST_CLIENTS_CONNECTION_UPDATE,handlermap.size());
 		sendBroadcast(intent);
 	}
+	
+	BroadcastReceiver statusRequestRecv = new BroadcastReceiver() {
+		
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			
+			sendHandlerCountNotification();
+		}
+	};
 }
