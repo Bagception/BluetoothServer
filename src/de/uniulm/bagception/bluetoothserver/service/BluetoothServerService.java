@@ -17,6 +17,7 @@ import de.philipphock.android.lib.logging.LOG;
 import de.philipphock.android.lib.services.messenger.MessengerService;
 import de.uniulm.bagception.bluetooth.BagceptionBTServiceInterface;
 import de.uniulm.bagception.bluetoothserver.service.impl.BundleProtocolHandler;
+import de.uniulm.bagception.broadcastconstants.BagceptionBroadcastContants;
 
 public class BluetoothServerService extends MessengerService implements Runnable, BagceptionBTServiceInterface {
 	
@@ -75,6 +76,7 @@ public class BluetoothServerService extends MessengerService implements Runnable
 				BluetoothSocket acceptedSocket = currWaitingSocket.accept();
 				BluetoothServerHandler h = handlerFactory.createHandler(this,acceptedSocket);
 				handlermap.put(h.toString(),h);
+				sendHandlerCountNotification();
 				executor.submit(h);
 				
 			}
@@ -130,6 +132,7 @@ public class BluetoothServerService extends MessengerService implements Runnable
 	
 	void unloadHandler(BluetoothServerHandler btsh){
 		handlermap.remove(btsh.toString());		
+		sendHandlerCountNotification();
 	}
 
 	
@@ -166,5 +169,12 @@ public class BluetoothServerService extends MessengerService implements Runnable
 			allHandlerSendToRemoteDevice(m.getData());
 			break;
 		}
+	}
+	
+	private void sendHandlerCountNotification(){
+		Intent intent = new Intent();
+		intent.setAction(BagceptionBroadcastContants.BROADCAST_CLIENTS_CONNECTION_UPDATE);
+		intent.putExtra(BagceptionBroadcastContants.BROADCAST_CLIENTS_CONNECTION_UPDATE,handlermap.size());
+		sendBroadcast(intent);
 	}
 }

@@ -16,30 +16,11 @@ public abstract class BluetoothServerHandler implements Callable<Void> {
 	protected final BluetoothServerService service;
 	protected final BluetoothSocket socket;
 
-	private static volatile int clientsConnected = 0;
-
-	public static int getClientsConnected() {
-		return clientsConnected;
-	}
-
-	private void clientConnected(boolean disconnect) {
-		if (disconnect) {
-			clientsConnected--;
-		} else {
-			clientsConnected++;
-		}
-
-		Intent intent = new Intent();
-		intent.setAction(BagceptionBroadcastContants.BROADCAST_CLIENTS_CONNECTION_UPDATE);
-		service.sendBroadcast(intent);
-	}
-
 	public BluetoothServerHandler(BluetoothServerService service,
 			BluetoothSocket socket) {
 		this.service = service;
 		this.socket = socket;
 
-		clientConnected(false);
 	}
 
 	@Override
@@ -82,7 +63,6 @@ public abstract class BluetoothServerHandler implements Callable<Void> {
 		}
 		
 		service.unloadHandler(this);
-		clientConnected(true);
 	}
 
 	public void send(byte[] bytes) {
