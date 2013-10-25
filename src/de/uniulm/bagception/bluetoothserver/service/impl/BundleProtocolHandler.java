@@ -27,7 +27,8 @@ public class BundleProtocolHandler extends PayloadContentLengthProtocolHandler i
 	}
 	
 	public void send(Bundle b){
-		protocol.out(b);
+		String toSend = protocol.out(b);
+		this.send(toSend);
 	}
 
 }

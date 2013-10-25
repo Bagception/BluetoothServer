@@ -91,7 +91,10 @@ public class BTServerController extends Activity implements ServiceObservationRe
 		EditText toSendTxt = (EditText) findViewById(R.id.toSendTxt);
 		String txt=toSendTxt.getText().toString();
 		Bundle b = new Bundle();
+		b.putString("cmd", "msg");
+		b.putString("payload", txt);
 		Message m = Message.obtain(null,BluetoothServerService.MESSAGE_TYPE_SENDMESSAGE,txt);
+		m.setData(b);
 		try {
 			serviceMessenger.send(m);
 		} catch (RemoteException e) {
@@ -267,6 +270,7 @@ public class BTServerController extends Activity implements ServiceObservationRe
 	//###### IPC ######\\
 	private final Handler incomingHandler = new Handler(new Handler.Callback() {
 		
+		//Handles incoming messages
 		@Override
 		public boolean handleMessage(Message msg) {
 			Log.d(TAG,"handle "+msg.toString());
