@@ -1,7 +1,6 @@
 package de.uniulm.bagception.bluetoothserver.service;
 
 import java.io.IOException;
-import java.lang.ref.WeakReference;
 import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -13,22 +12,12 @@ import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.IBinder;
 import android.os.Message;
-import android.os.Messenger;
-import android.os.RemoteException;
-import android.util.Log;
 import de.philipphock.android.lib.services.messenger.MessengerService;
-import de.philipphock.android.lib.services.observation.ObservableService;
 import de.uniulm.bagception.bluetooth.BagceptionBTServiceInterface;
-import de.uniulm.bagception.bluetoothserver.service.impl.BluetoothEchoHandler;
 import de.uniulm.bagception.bluetoothserver.service.impl.BundleProtocolHandler;
-import de.uniulm.bagception.bluetoothserver.service.impl.JSONCommandProtocolHandler;
-import de.uniulm.bagception.bluetoothserver.service.impl.PayloadContentLengthProtocolHandler;
 
 public class BluetoothServerService extends MessengerService implements Runnable, BagceptionBTServiceInterface {
-	private final String TAG = getClass().getName();
 	
 	public static final int MESSAGE_TYPE_SENDMESSAGE=1;
 	

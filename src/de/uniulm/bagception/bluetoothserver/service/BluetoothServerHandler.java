@@ -78,8 +78,9 @@ public abstract class BluetoothServerHandler implements Callable<Void> {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		clientConnected(true);
+		
 		service.unloadHandler(this);
+		clientConnected(true);
 	}
 
 	public void send(byte[] bytes) {
