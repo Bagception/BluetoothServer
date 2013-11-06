@@ -16,6 +16,10 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Message;
+import android.widget.Toast;
+
+import de.philipphock.android.lib.broadcast.blutooth.BluetoothStateActor;
+import de.philipphock.android.lib.broadcast.blutooth.BluetoothStateChangeReactor;
 import de.philipphock.android.lib.logging.LOG;
 import de.philipphock.android.lib.services.messenger.MessengerService;
 import de.uniulm.bagception.bluetooth.BagceptionBTServiceInterface;
@@ -23,49 +27,46 @@ import de.uniulm.bagception.bluetoothserver.service.impl.BundleProtocolHandler;
 import de.uniulm.bagception.bluetoothservermessengercommunication.MessengerConstants;
 import de.uniulm.bagception.broadcastconstants.BagceptionBroadcastContants;
 
-public class BluetoothServerService extends MessengerService implements Runnable, BagceptionBTServiceInterface {
-	
+public class BluetoothServerService extends MessengerService implements Runnable, BagceptionBTServiceInterface, BluetoothStateChangeReactor {
+
 	public static final int MESSAGE_TYPE_SENDMESSAGE=1;
-	
+
 	private Thread acceptThread;
 	private boolean keepAlive = true;
 
+    private Object lock=new Object();
+    private volatile boolean suspend=false;
     private final int executorCorePoolSize = 1;
     private final int executorMaxPoolSize = 10;
     private final int executorKeepAliveTime = 10;
-    
+
     private final ThreadPoolExecutor executor;
     private BluetoothServerSocket currWaitingSocket;
-	
+
 	private ConcurrentHashMap<String, BluetoothServerHandler> handlermap;
 
+    private BluetoothStateActor btState;
 	private final HandlerFactory handlerFactory;
-    
 
 
-    
+
+
     public BluetoothServerService() {
     	this.handlerFactory = new HandlerFactory() {
-			
+
 			@Override
 			public BluetoothServerHandler createHandler(BluetoothServerService service,
 					BluetoothSocket socket) {
-				
+
 				return new BundleProtocolHandler(service,socket);
-				
+
 			}
 		};
     	executor = new ThreadPoolExecutor(executorCorePoolSize, executorMaxPoolSize, executorKeepAliveTime, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(2));
 	}
     
 
-	/* ============ Service ============== */
 
-	
-	@Override
-	public int onStartCommand(Intent intent, int flags, int startId) {
-		return super.onStartCommand(intent, flags, startId);
-	}
 	
 	/* ============ Runnable ============== */
 
@@ -75,86 +76,98 @@ public class BluetoothServerService extends MessengerService implements Runnable
 		try {
 			currWaitingSocket = bluetoothAdapter.listenUsingRfcommWithServiceRecord(BT_SERVICE_NAME, UUID.fromString(BT_UUID));
 			while (keepAlive){
-				
-				BluetoothSocket acceptedSocket = currWaitingSocket.accept();
+
+
+                BluetoothSocket acceptedSocket = currWaitingSocket.accept();
 				BluetoothServerHandler h = handlerFactory.createHandler(this,acceptedSocket);
 				handlermap.put(h.toString(),h);
 				sendHandlerCountNotification();
 				executor.submit(h);
-				
+
 			}
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
-		
-		
+
+
 		for (BluetoothServerHandler handler : handlermap.values()) {
 		    handler.close();
 		}
 		handlermap.clear();
 	}
-	
 
-	
+
+
 	@Override
 	protected void onFirstInit() {
 		LOG.out(this,"Service init");
 
+        btState = new BluetoothStateActor(this);
+        btState.register(this);
 		IntentFilter register = new IntentFilter(BagceptionBroadcastContants.BROADCAST_CLIENTS_CONNECTION_UPDATE_REQUEST);
 		registerReceiver(statusRequestRecv, register);
-		
+
 		BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 		if (bluetoothAdapter == null) {
 		    // Device does not support Bluetooth
-			
+
 			return;
 		}
-		
+
 		if (!bluetoothAdapter.isEnabled()) {
-			
+
 		    return;
 		}
-		
-		handlermap = new ConcurrentHashMap<String, BluetoothServerHandler>();
 
-		acceptThread = new Thread(this);
-		acceptThread.start();
+		handlermap = new ConcurrentHashMap<String, BluetoothServerHandler>();
+        startListening();
+
 	}
 
-	
-	
+
+	void startListening(){
+        acceptThread = new Thread(this);
+        acceptThread.start();
+    }
+
+    void stopListening(){
+        keepAlive=false;
+        try {
+            currWaitingSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 	@Override
 	public void onDestroy() {
-		keepAlive = false;
-		try {
-			currWaitingSocket.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+        stopListening();
+
 		unregisterReceiver(statusRequestRecv);
+        btState.unregister(this);
 		super.onDestroy();
 	}
 
-	
-	
+
+
 	void unloadHandler(BluetoothServerHandler btsh){
-		handlermap.remove(btsh.toString());		
+		handlermap.remove(btsh.toString());
 		sendHandlerCountNotification();
 	}
 
-	
+
 	/**
-	 * Sends a String to all Handler, 
+	 * Sends a String to all Handler,
 	 * the handler will then send this to their remote devices
-	 * @param s the string to send
+	 * @param b the string to send
 	 */
 	private void allHandlerSendToRemoteDevice(Bundle b){
 		for (BluetoothServerHandler handler : handlermap.values()) {
-			BundleProtocolHandler handlerCasted = ((BundleProtocolHandler)handler); 
+			BundleProtocolHandler handlerCasted = ((BundleProtocolHandler)handler);
 		    handlerCasted.send(b);
 		}
 	}
-	
+
 
 	/**
 	 * Sends messages to bound activities
@@ -162,12 +175,12 @@ public class BluetoothServerService extends MessengerService implements Runnable
 	 * @param b data
 	 */
 	public void sendToBoundHandler(BluetoothServerHandler h,Bundle b){
-		
+
 		Message m = Message.obtain(null, MessengerConstants.MESSAGE_BUNDLE_MESSAGE);
 		m.setData(b);
 		sendToClients(m);
 	}
-	
+
 
 	@Override
 	protected void handleMessage(Message m) {
@@ -178,20 +191,60 @@ public class BluetoothServerService extends MessengerService implements Runnable
 
 		}
 	}
-	
+
 	private void sendHandlerCountNotification(){
 		Intent intent = new Intent();
 		intent.setAction(BagceptionBroadcastContants.BROADCAST_CLIENTS_CONNECTION_UPDATE);
 		intent.putExtra(BagceptionBroadcastContants.BROADCAST_CLIENTS_CONNECTION_UPDATE,handlermap.size());
 		sendBroadcast(intent);
 	}
-	
+
 	BroadcastReceiver statusRequestRecv = new BroadcastReceiver() {
-		
+
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			
+
 			sendHandlerCountNotification();
 		}
 	};
+
+
+    // BluetoothStateChangeReactor
+    @Override
+    public void onBluetoothEnabledChanged(boolean isEnabled) {
+
+    }
+
+    @Override
+    public void onBluetoothTurningOn() {
+        Toast.makeText(this,"Bluetooth on.. start listening",Toast.LENGTH_SHORT).show();
+        startListening();
+
+    }
+
+    @Override
+    public void onBluetoothTurningOff() {
+        stopListening();
+        Toast.makeText(this,"Bluetooth off.. stopping server",Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onBluetoothIsDiscoverable() {
+
+    }
+
+    @Override
+    public void onBluetoothIsConnectable() {
+
+    }
+
+    @Override
+    public void onBluetoothIsNotConnectableAndNotDiscoveralbe() {
+
+    }
+
+    @Override
+    public void onBluetoothIsNotDiscoveralbe() {
+
+    }
 }
