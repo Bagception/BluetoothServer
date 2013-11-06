@@ -3,11 +3,7 @@ package de.uniulm.bagception.bluetoothserver.service;
 import java.io.IOException;
 import java.util.concurrent.Callable;
 
-import de.uniulm.bagception.bluetooth.BagceptionBTServiceInterface;
-import de.uniulm.bagception.broadcastconstants.BagceptionBroadcastContants;
-
 import android.bluetooth.BluetoothSocket;
-import android.content.Intent;
 import android.util.Log;
 
 public abstract class BluetoothServerHandler implements Callable<Void> {
