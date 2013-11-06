@@ -217,7 +217,6 @@ public class BluetoothServerService extends MessengerService implements Runnable
 
     @Override
     public void onBluetoothTurningOn() {
-        Toast.makeText(this,"Bluetooth on.. start listening",Toast.LENGTH_SHORT).show();
         startListening();
 
     }
@@ -225,7 +224,6 @@ public class BluetoothServerService extends MessengerService implements Runnable
     @Override
     public void onBluetoothTurningOff() {
         stopListening();
-        Toast.makeText(this,"Bluetooth off.. stopping server",Toast.LENGTH_SHORT).show();
     }
 
     @Override
