@@ -16,8 +16,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Message;
-import android.widget.Toast;
-
 import de.philipphock.android.lib.broadcast.blutooth.BluetoothStateActor;
 import de.philipphock.android.lib.broadcast.blutooth.BluetoothStateChangeReactor;
 import de.philipphock.android.lib.logging.LOG;
@@ -34,8 +32,6 @@ public class BluetoothServerService extends MessengerService implements Runnable
 	private Thread acceptThread;
 	private boolean keepAlive = true;
 
-    private Object lock=new Object();
-    private volatile boolean suspend=false;
     private final int executorCorePoolSize = 1;
     private final int executorMaxPoolSize = 10;
     private final int executorKeepAliveTime = 10;
