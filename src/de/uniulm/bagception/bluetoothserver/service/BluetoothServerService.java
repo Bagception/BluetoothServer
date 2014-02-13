@@ -18,7 +18,6 @@ import android.os.Bundle;
 import android.os.Message;
 import de.philipphock.android.lib.broadcast.blutooth.BluetoothStateActor;
 import de.philipphock.android.lib.broadcast.blutooth.BluetoothStateChangeReactor;
-import de.philipphock.android.lib.logging.LOG;
 import de.philipphock.android.lib.services.messenger.MessengerService;
 import de.uniulm.bagception.bluetooth.BagceptionBTServiceInterface;
 import de.uniulm.bagception.bluetoothserver.service.impl.BundleProtocolHandler;
@@ -96,8 +95,6 @@ public class BluetoothServerService extends MessengerService implements Runnable
 
 	@Override
 	protected void onFirstInit() {
-		LOG.out(this,"Service init");
-
         btState = new BluetoothStateActor(this);
         btState.register(this);
 		IntentFilter register = new IntentFilter(BagceptionBroadcastContants.BROADCAST_CLIENTS_CONNECTION_UPDATE_REQUEST);

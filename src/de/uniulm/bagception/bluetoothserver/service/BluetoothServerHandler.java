@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.concurrent.Callable;
 
 import android.bluetooth.BluetoothSocket;
-import android.util.Log;
 
 public abstract class BluetoothServerHandler implements Callable<Void> {
 
@@ -22,7 +21,6 @@ public abstract class BluetoothServerHandler implements Callable<Void> {
 	@Override
 	public Void call() {
 		boolean running=true;
-		Log.d("Bluetooth", "BT handler active");
 		int inp;
 		byte[] buffer = new byte[1024];
 		try {
@@ -38,7 +36,6 @@ public abstract class BluetoothServerHandler implements Callable<Void> {
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
-			Log.d("Bluetooth", "BT handler out of loop");
 			running=false;
 			close();
 			
