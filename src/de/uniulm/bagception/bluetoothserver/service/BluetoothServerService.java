@@ -134,6 +134,9 @@ public class BluetoothServerService extends MessengerService implements Runnable
 
 	@Override
 	public void onDestroy() {
+		for (BluetoothServerHandler handler : handlermap.values()) {
+		    handler.close();
+		}
         stopListening();
 
 		unregisterReceiver(statusRequestRecv);
@@ -201,6 +204,7 @@ public class BluetoothServerService extends MessengerService implements Runnable
 		}
 	};
 
+	
 
     // BluetoothStateChangeReactor
     @Override
